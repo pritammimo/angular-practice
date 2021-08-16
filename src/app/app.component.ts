@@ -2,7 +2,7 @@
 import { Component } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { filter, map, switchMap } from 'rxjs/operators';
 @Component({
   selector: 'app-root',
   template: `
@@ -13,47 +13,46 @@ import { filter, map } from 'rxjs/operators';
       fxLayoutGap="30px"
       (ngSubmit)="this.loginForm.valid && login()"
       [formGroup]="this.loginForm"
-    >  
-    
-        <img width="20%" src="../assets/digiresume-green.png" />
-        <mat-card fxLayout="column">
-          <mat-form-field>
-            <input
-              formControlName="email"
-              type="Email"
-              matInput
-              placeholder="Email"
-            />
-            <mat-error>Email is Required</mat-error>
-          </mat-form-field>
-          <mat-form-field>
-            <input
-              formControlName="password"
-              type="password"
-              matInput
-              placeholder="Password"
-            />
-            <mat-error>6-10 digit Password is Required</mat-error>
-          </mat-form-field>
+    >
+      <img width="20%" src="../assets/digiresume-green.png" />
+      <mat-card fxLayout="column">
+        <mat-form-field>
+          <input
+            formControlName="email"
+            type="Email"
+            matInput
+            placeholder="Email"
+          />
+          <mat-error>Email is Required</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <input
+            formControlName="password"
+            type="password"
+            matInput
+            placeholder="Password"
+          />
+          <mat-error>6-10 digit Password is Required</mat-error>
+        </mat-form-field>
 
-          <a href="#">Forgot Password</a>
-          <div
-            style="margin-top:1rem"
-            fxLayout="row"
-            fxLayoutGap="20px"
-            fxLayoutAlign="end"
+        <a href="#">Forgot Password</a>
+        <div
+          style="margin-top:1rem"
+          fxLayout="row"
+          fxLayoutGap="20px"
+          fxLayoutAlign="end"
+        >
+          <button type="submit" color="primary" mat-raised-button>Login</button>
+          <button
+            type="button"
+            (click)="(signup)"
+            color="accent"
+            mat-raised-button
           >
-            <button
-              type="submit"
-              color="primary"
-              mat-raised-button
-            >
-              Login
-            </button>
-            <button type="button" (click)="signup" color="accent" mat-raised-button>Signup</button>
-          </div>
-        </mat-card>
-    
+            Signup
+          </button>
+        </div>
+      </mat-card>
     </form>
   `,
 
@@ -76,7 +75,7 @@ import { filter, map } from 'rxjs/operators';
 export class AppComponent {
   title = 'angular-course';
   loginForm: FormGroup;
-  myObserver!: Observable<any>; 
+  myObserver!: Observable<any>;
   //untouched,dirty
   constructor() {
     this.loginForm = new FormGroup({
@@ -87,42 +86,41 @@ export class AppComponent {
         Validators.maxLength(10),
       ]),
     });
+    this.buySugarFromShop();
   }
-  login() {
-    //using map
-    //observable is throwing->email && password
-    //  const mapObserver= this.loginForm.valueChanges.pipe(map(data =>{
-    //     return data.email;
-    //   }))
-    //   mapObserver.subscribe(data=>{
-    //     console.log(data)
+  buySugarInBulk() {
+    return new Observable((emitter) => {
+      emitter.next('Sugar is Purchased')
+    });
+  }
+  buySugarInquantity(quantity: any) {
+    return new Observable((emitter) => {
+      emitter.next('Sugar with Quantity:' + quantity + 'is here for you');
+    });
+  }
+  buySugarFromShop() {
+    //observable A is dependent on Observable B
+    //we need to observe value of B only
+    // this.buySugarInBulk().subscribe(data=>{
+    //   this.buySugarInquantity('1kg').subscribe(res=>{
+    //     console.log(res)
     //   })
-
-    //basic example
-    // this.myObserver=new Observable((emitter)=>{
-    //   emitter.next(this.loginForm.value)
-    // });
-    // this.myObserver.subscribe((data)=>{
-    //   console.log('called',data)
     // })
     
-    //using filter
-    // const filterObserver=this.loginForm.valueChanges.pipe(filter(data=>{
-    //   if(data.email === 'pritam@gmail.com'){
-    //     return true
-    //   }else{
-    //     return false
-    //   }
-    //     filterObserver.subscribe(data=>{
-    //       console.log(data)
-    //     });
-    // }
-     
-    //   ))
+    //switch map
+   const newObserver= this.buySugarInBulk().pipe(switchMap(()=>{
+     return this.buySugarInquantity('1kg')
+   }))
+   newObserver.subscribe((data)=>{
+     console.log(data)
+   })
   }
-  signup(){
-   this.myObserver.subscribe((data) => {
-     console.log('called', data);
-   });
+  login() {
+  
+  }
+  signup() {
+    this.myObserver.subscribe((data) => {
+      console.log('called', data);
+    });
   }
 }
